@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33122.133
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LearnOpenTK", "LearnOpenTK\LearnOpenTK.csproj", "{F03A034D-CC74-481E-A041-2BEB0418D3B9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{E3431488-8C86-486A-887F-28A3799B0243}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F03A034D-CC74-481E-A041-2BEB0418D3B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F03A034D-CC74-481E-A041-2BEB0418D3B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F03A034D-CC74-481E-A041-2BEB0418D3B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F03A034D-CC74-481E-A041-2BEB0418D3B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3431488-8C86-486A-887F-28A3799B0243}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3431488-8C86-486A-887F-28A3799B0243}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3431488-8C86-486A-887F-28A3799B0243}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3431488-8C86-486A-887F-28A3799B0243}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3EE1BC87-4F01-40D5-9D29-C6A3601444EB}
+	EndGlobalSection
+EndGlobal
