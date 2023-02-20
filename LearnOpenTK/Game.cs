@@ -4,16 +4,13 @@ using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LearnOpenTK
 {
     internal class Game : GameWindow
     {
         private int _vertexBufferObject;
+        private int _vertexArrayObject;
         private readonly float[] _vertices =
         {
             -0.5f, -0.5f, 0.0f,
@@ -49,10 +46,24 @@ namespace LearnOpenTK
             //С этого момента любые вызовы буфера, которые мы делаем (для BufferTarget.ArrayBuffer цели),
             //будут использоваться для настройки текущего связанного буфера, который является VertexBufferObject. 
             GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBufferObject);
+
             //Копирую данные в текущий связанный буфер
             GL.BufferData<float>(BufferTarget.ArrayBuffer, _vertices.Length * sizeof(float), _vertices, BufferUsageHint.StaticDraw);
 
+            //Создал объек массива вершин и сохранил дескриптор
+            _vertexArrayObject = GL.GenVertexArray();
+            //Привязка VAO 
+            // С этого момента мы должны привязать / настроить соответствующие VBO(ы) и указатели атрибутов,
+            // а затем отменить привязку VAO для последующего использования. Как только мы хотим нарисовать объект,
+            // мы просто привязываем VAO к предпочтительным настройкам перед рисованием объекта, и все. 
+            GL.BindVertexArray(_vertexArrayObject);
+
+            //Связывание атрибутов вершин
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
+            GL.EnableVertexAttribArray(0);
+
             _shader = new Shader("Shaders/shader.vert", "Shaders/shader.frag");
+            _shader.Use();
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -60,10 +71,11 @@ namespace LearnOpenTK
             base.OnRenderFrame(e);
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
-            //Code goes here.
+            _shader.Use();
+            GL.BindVertexArray(_vertexArrayObject);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
 
-            Context.SwapBuffers();
-
+            SwapBuffers();
         }
 
         protected override void OnResize(EventArgs e)
@@ -74,8 +86,18 @@ namespace LearnOpenTK
 
         protected override void OnUnload(EventArgs e)
         {
-            base.OnUnload(e);
+            // Unbind all the resources by binding the targets to 0/null.
+            GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
+            GL.BindVertexArray(0);
+            GL.UseProgram(0);
+
+            // Delete all the resources.
+            GL.DeleteBuffer(_vertexBufferObject);
+            GL.DeleteVertexArray(_vertexArrayObject);
+
             _shader.Dispose();
+
+            base.OnUnload(e);
         }
     }
 }
