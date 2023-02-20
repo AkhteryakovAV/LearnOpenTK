@@ -10,13 +10,20 @@ namespace LearnOpenTK
     internal class Game : GameWindow
     {
         private int _vertexBufferObject;
+        private int _elementBufferObject;
         private int _vertexArrayObject;
         private readonly float[] _vertices =
         {
-            -0.5f, -0.5f, 0.0f,
-             0.5f, -0.5f, 0.0f,
-             0.0f,  0.5f, 0.0f
+             0.5f,  0.5f, 0.0f,  // top right
+             0.5f, -0.5f, 0.0f,  // bottom right
+            -0.5f, -0.5f, 0.0f,  // bottom left
+            -0.5f,  0.5f, 0.0f   // top left
         };
+        uint[] _indices = {  // note that we start from 0!
+            0, 1, 3,   // first triangle
+            1, 2, 3    // second triangle
+        };
+
         private Shader _shader;
         public Game(int width, int height, string title)
             : base(width, height, GraphicsMode.Default, title)
@@ -62,6 +69,10 @@ namespace LearnOpenTK
             GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
             GL.EnableVertexAttribArray(0);
 
+            _elementBufferObject= GL.GenBuffer();
+            GL.BindBuffer(BufferTarget.ElementArrayBuffer, _elementBufferObject);
+            GL.BufferData(BufferTarget.ElementArrayBuffer, _indices.Length * sizeof(uint), _indices, BufferUsageHint.StaticDraw);
+
             _shader = new Shader("Shaders/shader.vert", "Shaders/shader.frag");
             _shader.Use();
         }
@@ -73,7 +84,7 @@ namespace LearnOpenTK
 
             _shader.Use();
             GL.BindVertexArray(_vertexArrayObject);
-            GL.DrawArrays(PrimitiveType.Triangles, 0, 3);
+            GL.DrawElements(PrimitiveType.Triangles, _indices.Length, DrawElementsType.UnsignedInt, 0);
 
             SwapBuffers();
         }
