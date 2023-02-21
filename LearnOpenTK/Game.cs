@@ -12,24 +12,51 @@ namespace LearnOpenTK
         private int _vertexBufferObject;
         private int _elementBufferObject;
         private int _vertexArrayObject;
-        private readonly float[] _vertices =
-        {
-             0.5f,  0.5f, 0.0f,  // top right
-             0.5f, -0.5f, 0.0f,  // bottom right
-            -0.5f, -0.5f, 0.0f,  // bottom left
-            -0.5f,  0.5f, 0.0f   // top left
-        };
-        uint[] _indices = {  // note that we start from 0!
-            0, 1, 3,   // first triangle
-            1, 2, 3    // second triangle
-        };
+
+        //Кол-во вершин на окружности
+        private readonly int _vertexCount = 50;
+
+        private float[] _vertices;
+        uint[] _indices;
 
         private Shader _shader;
         public Game(int width, int height, string title)
             : base(width, height, GraphicsMode.Default, title)
         {
         }
+        private void InitializeCircle()
+        {
+            _vertices = new float[(_vertexCount + 1) * 3]; // +1 центральная вершина
+            _vertices[0] = 0.0f;
+            _vertices[1] = 0.0f;
+            _vertices[2] = 0.0f;
+            double alpha = 2*Math.PI / _vertexCount;
+            uint elementIndex = 0;
+            for (int i = 3; i < _vertices.Length;)
+            {
+                //Единичная окружность
+                double currentDeg = alpha * elementIndex;
+                _vertices[i] = (float)Math.Cos(currentDeg);
+                _vertices[i + 1] = (float)Math.Sin(currentDeg);
+                _vertices[i + 2] = 0.0f;
+                i += 3;
+                elementIndex++;
+            }
 
+            _indices = new uint[_vertexCount * 3];
+            elementIndex = 0;
+            for (uint i = 0; i < _indices.Length - 3;)
+            {
+                _indices[i] = 0;
+                _indices[i + 1] = elementIndex + 1;
+                _indices[i + 2] = elementIndex + 2;
+                i += 3;
+                elementIndex++;
+            }
+            _indices[_indices.Length - 3] = 0;
+            _indices[_indices.Length - 2] = elementIndex + 1;
+            _indices[_indices.Length - 1] = 1;
+        }
 
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
@@ -44,11 +71,12 @@ namespace LearnOpenTK
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
+            InitializeCircle();
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
             _vertexBufferObject = GL.GenBuffer();
             _vertexArrayObject = GL.GenVertexArray();
-            _elementBufferObject= GL.GenBuffer();
+            _elementBufferObject = GL.GenBuffer();
             _shader = new Shader("Shaders/shader.vert", "Shaders/shader.frag");
 
             // 1. Привязываем VAO
@@ -74,7 +102,7 @@ namespace LearnOpenTK
             _shader.Use();
             GL.BindVertexArray(_vertexArrayObject);
             GL.DrawElements(PrimitiveType.Triangles, _indices.Length, DrawElementsType.UnsignedInt, 0);
-            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
+            GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
 
             SwapBuffers();
         }
