@@ -15,7 +15,7 @@ namespace LearnOpenTK
         private int _elementBufferObject;
         private int _vertexArrayObject;
         private readonly float[] _vertices =
-        {
+        {  //Координаты вершин    Цвета вершин        Текстурные координаты
              0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,  // top right
              0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,  // bottom right
             -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,  // bottom left
