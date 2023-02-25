@@ -5,6 +5,7 @@ using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
 using System;
 using System.Diagnostics;
+using System.Runtime.Remoting.Messaging;
 
 namespace LearnOpenTK
 {
@@ -15,10 +16,10 @@ namespace LearnOpenTK
         private int _vertexArrayObject;
         private readonly float[] _vertices =
         {
-             0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // top right
-             0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,  // bottom right
-            -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f,  // bottom left
-            -0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f   // top left
+             0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,  // top right
+             0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,  // bottom right
+            -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,  // bottom left
+            -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f,  // top left
         };
         uint[] _indices = {  // note that we start from 0!
             0, 1, 3,   // first triangle
@@ -26,8 +27,8 @@ namespace LearnOpenTK
         };
 
         private Shader _shader;
+        private Texture _texture;
 
-        private Stopwatch _timer;
         public Game(int width, int height, string title)
             : base(width, height, GraphicsMode.Default, title)
         {
@@ -62,18 +63,25 @@ namespace LearnOpenTK
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, _elementBufferObject);
             GL.BufferData(BufferTarget.ElementArrayBuffer, _indices.Length * sizeof(uint), _indices, BufferUsageHint.StaticDraw);
             // 3. Устанавливаем указатели на вершинные атрибуты
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
-            GL.EnableVertexAttribArray(0);
-            GL.VertexAttribPointer(1, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 3 * sizeof(float));
-            GL.EnableVertexAttribArray(1);
+            var vertexLocation = _shader.GetAttribLocation("aPosition");
+            GL.VertexAttribPointer(vertexLocation, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 0);
+            GL.EnableVertexAttribArray(vertexLocation);
+           
+            var colorLocation = _shader.GetAttribLocation("aColor");
+            GL.VertexAttribPointer(colorLocation, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 3 * sizeof(float));
+            GL.EnableVertexAttribArray(colorLocation);
+          
+            int texCoordLocation = _shader.GetAttribLocation("aTexCoord");
+            GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 8 * sizeof(float), 6 * sizeof(float));
+            GL.EnableVertexAttribArray(texCoordLocation);
 
             GL.GetInteger(GetPName.MaxVertexAttribs, out int maxAttributeCount);
             Debug.WriteLine($"Maximum number of vertex attributes supported: {maxAttributeCount}");
 
             _shader.Use();
 
-            _timer = new Stopwatch();
-            _timer.Start();
+            _texture = Texture.LoadFromFile("Textures/container.jpg");
+            _texture.Use(TextureUnit.Texture0);
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -81,14 +89,8 @@ namespace LearnOpenTK
             base.OnRenderFrame(e);
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
+            _texture.Use(TextureUnit.Texture0);
             _shader.Use();
-
-            double timeValue = _timer.Elapsed.TotalSeconds;
-            float greenValue = (float)Math.Sin(timeValue) / 2.0f + 0.5f;
-            //Индекс (местоположение) атрибута uniform в шейдере
-            int vertexColorLocation = GL.GetUniformLocation(_shader.Handle, "ourColor");
-            //Для обновления uniform требуется сначала использовать шейдерную программу - GL.UseProgram(Handle);
-            GL.Uniform4(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 
             GL.BindVertexArray(_vertexArrayObject);
             GL.DrawElements(PrimitiveType.Triangles, _indices.Length, DrawElementsType.UnsignedInt, 0);
@@ -115,7 +117,7 @@ namespace LearnOpenTK
             GL.DeleteVertexArray(_vertexArrayObject);
 
             _shader.Dispose();
-            _timer.Stop();
+            _texture.Dispose();
 
             base.OnUnload(e);
         }

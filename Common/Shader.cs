@@ -102,6 +102,11 @@ namespace Common
             GL.UseProgram(Handle);
         }
 
+        public int GetAttribLocation(string attribName)
+        {
+            return GL.GetAttribLocation(Handle, attribName);
+        }
+
         protected virtual void Dispose(bool disposing)
         {
             if (!_disposedValue)
