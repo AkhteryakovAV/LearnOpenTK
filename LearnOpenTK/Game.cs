@@ -4,6 +4,7 @@ using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
 using OpenTK.Input;
 using System;
+using System.Diagnostics;
 
 namespace LearnOpenTK
 {
@@ -14,10 +15,10 @@ namespace LearnOpenTK
         private int _vertexArrayObject;
         private readonly float[] _vertices =
         {
-             0.5f,  0.5f, 0.0f,  // top right
-             0.5f, -0.5f, 0.0f,  // bottom right
-            -0.5f, -0.5f, 0.0f,  // bottom left
-            -0.5f,  0.5f, 0.0f   // top left
+             0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // top right
+             0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,  // bottom right
+            -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f,  // bottom left
+            -0.5f,  0.5f, 0.0f, 1.0f, 1.0f, 0.0f   // top left
         };
         uint[] _indices = {  // note that we start from 0!
             0, 1, 3,   // first triangle
@@ -25,11 +26,12 @@ namespace LearnOpenTK
         };
 
         private Shader _shader;
+
+        private Stopwatch _timer;
         public Game(int width, int height, string title)
             : base(width, height, GraphicsMode.Default, title)
         {
         }
-
 
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
@@ -48,7 +50,7 @@ namespace LearnOpenTK
 
             _vertexBufferObject = GL.GenBuffer();
             _vertexArrayObject = GL.GenVertexArray();
-            _elementBufferObject= GL.GenBuffer();
+            _elementBufferObject = GL.GenBuffer();
             _shader = new Shader("Shaders/shader.vert", "Shaders/shader.frag");
 
             // 1. Привязываем VAO
@@ -60,10 +62,13 @@ namespace LearnOpenTK
             GL.BindBuffer(BufferTarget.ElementArrayBuffer, _elementBufferObject);
             GL.BufferData(BufferTarget.ElementArrayBuffer, _indices.Length * sizeof(uint), _indices, BufferUsageHint.StaticDraw);
             // 3. Устанавливаем указатели на вершинные атрибуты
-            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
+            GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, 6 * sizeof(float), 0);
             GL.EnableVertexAttribArray(0);
 
             _shader.Use();
+
+            _timer = new Stopwatch();
+            _timer.Start();
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -72,6 +77,14 @@ namespace LearnOpenTK
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
             _shader.Use();
+
+            double timeValue = _timer.Elapsed.TotalSeconds;
+            float greenValue = (float)Math.Sin(timeValue) / 2.0f + 0.5f;
+            //Индекс (местоположение) атрибута uniform в шейдере
+            int vertexColorLocation = GL.GetUniformLocation(_shader.Handle, "ourColor");
+            //Для обновления uniform требуется сначала использовать шейдерную программу - GL.UseProgram(Handle);
+            GL.Uniform4(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+
             GL.BindVertexArray(_vertexArrayObject);
             GL.DrawElements(PrimitiveType.Triangles, _indices.Length, DrawElementsType.UnsignedInt, 0);
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
@@ -97,6 +110,7 @@ namespace LearnOpenTK
             GL.DeleteVertexArray(_vertexArrayObject);
 
             _shader.Dispose();
+            _timer.Stop();
 
             base.OnUnload(e);
         }

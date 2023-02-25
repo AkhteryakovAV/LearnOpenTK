@@ -11,10 +11,8 @@ namespace Common
 {
     public class Shader
     {
-        //Дескриптор будет представлять местоположение нашей окончательной шейдерной программы
-        //после завершения ее компиляции.
-        private int _handle;
         private bool _disposedValue = false;
+
         public Shader(string vertexPath, string fragmentPath)
         {
             CreateShaderItem(vertexPath, ShaderType.VertexShader, out int vertexShader);
@@ -27,11 +25,13 @@ namespace Common
 
             //Отдельные вершинные и фрагментные шейдеры теперь бесполезны, поскольку они связаны;
             //скомпилированные данные копируются в шейдерную программу при их связывании. 
-            GL.DetachShader(_handle, vertexShader);
-            GL.DetachShader(_handle, fragmentShader);
+            GL.DetachShader(Handle, vertexShader);
+            GL.DetachShader(Handle, fragmentShader);
             GL.DeleteShader(vertexShader);
             GL.DeleteShader(fragmentShader);
         }
+
+        public int Handle { get; set; }
 
         /// <summary>
         /// Связывает отдельные шейдеры в одну программу, которую можно запускать на графическом процессоре.
@@ -40,16 +40,16 @@ namespace Common
         /// <exception cref="Exception"></exception>
         private void AttachShaders(int[] shaders)
         {
-            _handle = GL.CreateProgram();
+            Handle = GL.CreateProgram();
             foreach (var shader in shaders)
             {
-                GL.AttachShader(_handle, shader);
+                GL.AttachShader(Handle, shader);
             }
-            GL.LinkProgram(_handle);
-            GL.GetProgram(_handle, GetProgramParameterName.LinkStatus, out int success);
+            GL.LinkProgram(Handle);
+            GL.GetProgram(Handle, GetProgramParameterName.LinkStatus, out int success);
             if (success != (int)All.True)
             {
-                string infoLog = GL.GetProgramInfoLog(_handle);
+                string infoLog = GL.GetProgramInfoLog(Handle);
                 throw new Exception(infoLog);
             }
         }
@@ -99,14 +99,14 @@ namespace Common
 
         public void Use()
         {
-            GL.UseProgram(_handle);
+            GL.UseProgram(Handle);
         }
 
         protected virtual void Dispose(bool disposing)
         {
             if (!_disposedValue)
             {
-                GL.DeleteProgram(_handle);
+                GL.DeleteProgram(Handle);
                 _disposedValue = true;
             }
         }
@@ -118,7 +118,7 @@ namespace Common
 
         ~Shader()
         {
-            GL.DeleteProgram(_handle);
+            GL.DeleteProgram(Handle);
         }
     }
 }
