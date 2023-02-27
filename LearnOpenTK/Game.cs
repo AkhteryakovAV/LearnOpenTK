@@ -27,7 +27,8 @@ namespace LearnOpenTK
         };
 
         private Shader _shader;
-        private Texture _texture;
+        private Texture _texture1;
+        private Texture _texture2;
 
         public Game(int width, int height, string title)
             : base(width, height, GraphicsMode.Default, title)
@@ -80,8 +81,13 @@ namespace LearnOpenTK
 
             _shader.Use();
 
-            _texture = Texture.LoadFromFile("Textures/container.jpg");
-            _texture.Use(TextureUnit.Texture0);
+            _texture1 = Texture.LoadFromFile("Textures/container.jpg");
+            _texture2 = Texture.LoadFromFile("Textures/awesomeface.png");
+            _shader.SetInt("ourTexture1", 0);
+            _shader.SetInt("ourTexture2", 1);
+
+            _texture1.Use(TextureUnit.Texture0);
+            _texture2.Use(TextureUnit.Texture1);
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -89,7 +95,8 @@ namespace LearnOpenTK
             base.OnRenderFrame(e);
             GL.Clear(ClearBufferMask.ColorBufferBit);
 
-            _texture.Use(TextureUnit.Texture0);
+            _texture1.Use(TextureUnit.Texture0);
+            _texture2.Use(TextureUnit.Texture1);
             _shader.Use();
 
             GL.BindVertexArray(_vertexArrayObject);
@@ -117,7 +124,8 @@ namespace LearnOpenTK
             GL.DeleteVertexArray(_vertexArrayObject);
 
             _shader.Dispose();
-            _texture.Dispose();
+            _texture1.Dispose();
+            _texture2.Dispose();
 
             base.OnUnload(e);
         }

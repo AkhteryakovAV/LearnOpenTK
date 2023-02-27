@@ -50,7 +50,7 @@ namespace Common
             Handle = glHandle;
         }
 
-        public void Use(TextureUnit unit)
+        public void Use(TextureUnit unit = TextureUnit.Texture0)
         {
             GL.ActiveTexture(unit);
             GL.BindTexture(TextureTarget.Texture2D, Handle);

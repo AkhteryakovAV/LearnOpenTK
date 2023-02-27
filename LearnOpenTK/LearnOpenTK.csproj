@@ -72,6 +72,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Textures\awesomeface.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Textures\container.jpg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
