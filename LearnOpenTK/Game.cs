@@ -94,14 +94,19 @@ namespace LearnOpenTK
         {
             base.OnRenderFrame(e);
             GL.Clear(ClearBufferMask.ColorBufferBit);
-
-            _texture1.Use(TextureUnit.Texture0);
-            _texture2.Use(TextureUnit.Texture1);
-            _shader.Use();
-
             GL.BindVertexArray(_vertexArrayObject);
             GL.DrawElements(PrimitiveType.Triangles, _indices.Length, DrawElementsType.UnsignedInt, 0);
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
+
+            var transform = Matrix4.Identity;
+            transform *= Matrix4.CreateScale(1.1f);
+            transform *= Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(20f));
+            transform *= Matrix4.CreateTranslation(0.1f, 0.1f, 0.0f);
+
+            _texture1.Use(TextureUnit.Texture0);
+            _texture2.Use(TextureUnit.Texture1);
+            _shader.SetMatrix4("transform", transform);
+            _shader.Use();
 
             SwapBuffers();
         }

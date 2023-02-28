@@ -1,4 +1,5 @@
-﻿using OpenTK.Graphics.OpenGL;
+﻿using OpenTK;
+using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,7 +13,7 @@ namespace Common
     public class Shader
     {
         private bool _disposedValue = false;
-
+        private readonly Dictionary<string, int> _uniformLocations;
         public Shader(string vertexPath, string fragmentPath)
         {
             CreateShaderItem(vertexPath, ShaderType.VertexShader, out int vertexShader);
@@ -29,6 +30,16 @@ namespace Common
             GL.DetachShader(Handle, fragmentShader);
             GL.DeleteShader(vertexShader);
             GL.DeleteShader(fragmentShader);
+            GL.GetProgram(Handle, GetProgramParameterName.ActiveUniforms, out var numberOfUniforms);
+
+            _uniformLocations = new Dictionary<string, int>();
+
+            for (var i = 0; i < numberOfUniforms; i++)
+            {
+                var key = GL.GetActiveUniform(Handle, i, out _, out _);
+                var location = GL.GetUniformLocation(Handle, key);
+                _uniformLocations.Add(key, location);
+            }
         }
 
         public int Handle { get; set; }
@@ -126,6 +137,12 @@ namespace Common
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        public void SetMatrix4(string name, Matrix4 matrix)
+        {
+            GL.UseProgram(Handle);
+            GL.UniformMatrix4(_uniformLocations[name], true, ref matrix);
         }
 
         ~Shader()
