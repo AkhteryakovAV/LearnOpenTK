@@ -26,6 +26,10 @@ namespace LearnOpenTK
             1, 2, 3    // second triangle
         };
 
+        private double _time;
+        private Matrix4 _view;
+        private Matrix4 _projection;
+
         private Shader _shader;
         private Texture _texture1;
         private Texture _texture2;
@@ -49,6 +53,11 @@ namespace LearnOpenTK
         {
             base.OnLoad(e);
             GL.ClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+
+            // We enable depth testing here. If you try to draw something more complex than one plane without this,
+            // you'll notice that polygons further in the background will occasionally be drawn over the top of the ones in the foreground.
+            // Obviously, we don't want this, so we enable depth testing. We also clear the depth buffer in GL.Clear over in OnRenderFrame.
+            //GL.Enable(EnableCap.DepthTest);
 
             _vertexBufferObject = GL.GenBuffer();
             _vertexArrayObject = GL.GenVertexArray();
@@ -88,24 +97,30 @@ namespace LearnOpenTK
 
             _texture1.Use(TextureUnit.Texture0);
             _texture2.Use(TextureUnit.Texture1);
+
+            _view = Matrix4.CreateTranslation(0.0f, 0.0f, -3.0f);
+            _projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45f), Width / (float)Height, 0.1f, 100.0f);
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
         {
             base.OnRenderFrame(e);
+
             GL.Clear(ClearBufferMask.ColorBufferBit);
+            //GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.BindVertexArray(_vertexArrayObject);
             GL.DrawElements(PrimitiveType.Triangles, _indices.Length, DrawElementsType.UnsignedInt, 0);
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
 
-            var transform = Matrix4.Identity;
-            transform *= Matrix4.CreateScale(1.1f);
-            transform *= Matrix4.CreateRotationZ(MathHelper.DegreesToRadians(20f));
-            transform *= Matrix4.CreateTranslation(0.1f, 0.1f, 0.0f);
-
             _texture1.Use(TextureUnit.Texture0);
             _texture2.Use(TextureUnit.Texture1);
-            _shader.SetMatrix4("transform", transform);
+
+            _time += 4.0 * e.Time;
+            var model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(_time));
+            _shader.SetMatrix4("model", model);
+            _shader.SetMatrix4("view", _view);
+            _shader.SetMatrix4("projection", _projection);
+
             _shader.Use();
 
             SwapBuffers();
