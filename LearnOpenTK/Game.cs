@@ -16,15 +16,15 @@ namespace LearnOpenTK
         private int _vertexArrayObject;
         private readonly float[] _vertices =
         {
-            0.5f, -0.5f, 0.5f, 1.0f, 0.0f,
-            0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
-            -0.5f, 0.5f, 0.5f, 0.0f, 1.0f,
-            -0.5f, -0.5f, 0.5f, 0.0f, 0.0f,
+            0.5f, -0.5f, 0.5f,
+            0.5f, 0.5f, 0.5f,
+            -0.5f, 0.5f, 0.5f,
+            -0.5f, -0.5f, 0.5f,
 
-            0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
-            0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
-            -0.5f, 0.5f, -0.5f, 0.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+            0.5f, -0.5f, -0.5f,
+            0.5f, 0.5f, -0.5f,
+            -0.5f, 0.5f, -0.5f,
+            -0.5f, -0.5f, -0.5f,
         };
         uint[] _indices = {
             0, 1, 2,
@@ -46,7 +46,6 @@ namespace LearnOpenTK
         private Matrix4 _projection;
 
         private Shader _shader;
-        private Texture _texture1;
 
         public Game(int width, int height, string title)
             : base(width, height, GraphicsMode.Default, title)
@@ -84,25 +83,10 @@ namespace LearnOpenTK
             GL.BufferData(BufferTarget.ElementArrayBuffer, _indices.Length * sizeof(uint), _indices, BufferUsageHint.StaticDraw);
             // 3. Устанавливаем указатели на вершинные атрибуты
             var vertexLocation = _shader.GetAttribLocation("aPosition");
-            GL.VertexAttribPointer(vertexLocation, 3, VertexAttribPointerType.Float, false, 5 * sizeof(float), 0);
+            GL.VertexAttribPointer(vertexLocation, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
             GL.EnableVertexAttribArray(vertexLocation);
 
-            int texCoordLocation = _shader.GetAttribLocation("aTexCoord");
-            GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));
-            GL.EnableVertexAttribArray(texCoordLocation);
-
-            //GL.GetInteger(GetPName.MaxVertexAttribs, out int maxAttributeCount);
-            //Debug.WriteLine($"Maximum number of vertex attributes supported: {maxAttributeCount}");
-
             _shader.Use();
-
-            _texture1 = Texture.LoadFromFile("Textures/container.jpg");
-            //_texture2 = Texture.LoadFromFile("Textures/awesomeface.png");
-            _shader.SetInt("ourTexture1", 0);
-            //_shader.SetInt("ourTexture2", 1);
-
-            _texture1.Use(TextureUnit.Texture0);
-            //_texture2.Use(TextureUnit.Texture1);
 
             _view = Matrix4.CreateTranslation(0.0f, 0.0f, -3.0f);
             _projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45f), Width / (float)Height, 0.1f, 100.0f);
@@ -115,10 +99,7 @@ namespace LearnOpenTK
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.BindVertexArray(_vertexArrayObject);
             GL.DrawElements(PrimitiveType.Triangles, _indices.Length, DrawElementsType.UnsignedInt, 0);
-            //GL.DrawArrays(PrimitiveType.Triangles, 0, _vertices.Length);
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
-
-            _texture1.Use(TextureUnit.Texture0);
 
             _time += 40.0 * e.Time;
             var model = Matrix4.Identity *
@@ -152,7 +133,6 @@ namespace LearnOpenTK
             GL.DeleteVertexArray(_vertexArrayObject);
 
             _shader.Dispose();
-            _texture1.Dispose();
 
             base.OnUnload(e);
         }
