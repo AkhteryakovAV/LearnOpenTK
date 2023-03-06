@@ -12,19 +12,56 @@ namespace LearnOpenTK
     internal class Game : GameWindow
     {
         private int _vertexBufferObject;
-        private int _elementBufferObject;
+        //private int _elementBufferObject;
         private int _vertexArrayObject;
         private readonly float[] _vertices =
-        {  //Координаты вершин    Цвета вершин        Текстурные координаты
-             0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,  // top right
-             0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,  // bottom right
-            -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,  // bottom left
-            -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f,  // top left
+        {
+            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+             0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+             0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+             0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+            -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+             0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+             0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+             0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+             0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+             0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+             0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+             0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
         };
-        uint[] _indices = {  // note that we start from 0!
-            0, 1, 3,   // first triangle
-            1, 2, 3    // second triangle
-        };
+        //uint[] _indices = {  // note that we start from 0!
+        //    0, 1, 3,   // first triangle
+        //    1, 2, 3    // second triangle
+        //};
 
         private double _time;
         private Matrix4 _view;
@@ -32,12 +69,11 @@ namespace LearnOpenTK
 
         private Shader _shader;
         private Texture _texture1;
-        private Texture _texture2;
+        //private Texture _texture2;
 
         public Game(int width, int height, string title)
             : base(width, height, GraphicsMode.Default, title)
-        {
-        }
+        { }
 
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
@@ -57,11 +93,11 @@ namespace LearnOpenTK
             // We enable depth testing here. If you try to draw something more complex than one plane without this,
             // you'll notice that polygons further in the background will occasionally be drawn over the top of the ones in the foreground.
             // Obviously, we don't want this, so we enable depth testing. We also clear the depth buffer in GL.Clear over in OnRenderFrame.
-            //GL.Enable(EnableCap.DepthTest);
+            GL.Enable(EnableCap.DepthTest);
 
             _vertexBufferObject = GL.GenBuffer();
             _vertexArrayObject = GL.GenVertexArray();
-            _elementBufferObject = GL.GenBuffer();
+            //_elementBufferObject = GL.GenBuffer();
             _shader = new Shader("Shaders/shader.vert", "Shaders/shader.frag");
 
             // 1. Привязываем VAO
@@ -70,33 +106,33 @@ namespace LearnOpenTK
             GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBufferObject);
             GL.BufferData<float>(BufferTarget.ArrayBuffer, _vertices.Length * sizeof(float), _vertices, BufferUsageHint.StaticDraw);
             // 3. Копируем наши индексы в в буфер для OpenGL
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, _elementBufferObject);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, _indices.Length * sizeof(uint), _indices, BufferUsageHint.StaticDraw);
+            //GL.BindBuffer(BufferTarget.ElementArrayBuffer, _elementBufferObject);
+            //GL.BufferData(BufferTarget.ElementArrayBuffer, _indices.Length * sizeof(uint), _indices, BufferUsageHint.StaticDraw);
             // 3. Устанавливаем указатели на вершинные атрибуты
             var vertexLocation = _shader.GetAttribLocation("aPosition");
-            GL.VertexAttribPointer(vertexLocation, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 0);
+            GL.VertexAttribPointer(vertexLocation, 3, VertexAttribPointerType.Float, false, 5 * sizeof(float), 0);
             GL.EnableVertexAttribArray(vertexLocation);
-           
-            var colorLocation = _shader.GetAttribLocation("aColor");
-            GL.VertexAttribPointer(colorLocation, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 3 * sizeof(float));
-            GL.EnableVertexAttribArray(colorLocation);
-          
+
+            //var colorLocation = _shader.GetAttribLocation("aColor");
+            //GL.VertexAttribPointer(colorLocation, 3, VertexAttribPointerType.Float, false, 8 * sizeof(float), 3 * sizeof(float));
+            //GL.EnableVertexAttribArray(colorLocation);
+
             int texCoordLocation = _shader.GetAttribLocation("aTexCoord");
-            GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 8 * sizeof(float), 6 * sizeof(float));
+            GL.VertexAttribPointer(texCoordLocation, 2, VertexAttribPointerType.Float, false, 5 * sizeof(float), 3 * sizeof(float));
             GL.EnableVertexAttribArray(texCoordLocation);
 
-            GL.GetInteger(GetPName.MaxVertexAttribs, out int maxAttributeCount);
-            Debug.WriteLine($"Maximum number of vertex attributes supported: {maxAttributeCount}");
+            //GL.GetInteger(GetPName.MaxVertexAttribs, out int maxAttributeCount);
+            //Debug.WriteLine($"Maximum number of vertex attributes supported: {maxAttributeCount}");
 
             _shader.Use();
 
             _texture1 = Texture.LoadFromFile("Textures/container.jpg");
-            _texture2 = Texture.LoadFromFile("Textures/awesomeface.png");
+            //_texture2 = Texture.LoadFromFile("Textures/awesomeface.png");
             _shader.SetInt("ourTexture1", 0);
-            _shader.SetInt("ourTexture2", 1);
+            //_shader.SetInt("ourTexture2", 1);
 
             _texture1.Use(TextureUnit.Texture0);
-            _texture2.Use(TextureUnit.Texture1);
+            //_texture2.Use(TextureUnit.Texture1);
 
             _view = Matrix4.CreateTranslation(0.0f, 0.0f, -3.0f);
             _projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45f), Width / (float)Height, 0.1f, 100.0f);
@@ -106,17 +142,21 @@ namespace LearnOpenTK
         {
             base.OnRenderFrame(e);
 
-            GL.Clear(ClearBufferMask.ColorBufferBit);
-            //GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+            //GL.Clear(ClearBufferMask.ColorBufferBit);
+            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             GL.BindVertexArray(_vertexArrayObject);
-            GL.DrawElements(PrimitiveType.Triangles, _indices.Length, DrawElementsType.UnsignedInt, 0);
+            //GL.DrawElements(PrimitiveType.Triangles, _indices.Length, DrawElementsType.UnsignedInt, 0);
+            GL.DrawArrays(PrimitiveType.Triangles, 0, _vertices.Length);
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
 
             _texture1.Use(TextureUnit.Texture0);
-            _texture2.Use(TextureUnit.Texture1);
+            //_texture2.Use(TextureUnit.Texture1);
 
-            _time += 4.0 * e.Time;
-            var model = Matrix4.Identity * Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(_time));
+            _time += 40.0 * e.Time;
+            var model = Matrix4.Identity *
+                Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(_time)) *
+                Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(_time * Math.Sin(MathHelper.DegreesToRadians(_time))));
+
             _shader.SetMatrix4("model", model);
             _shader.SetMatrix4("view", _view);
             _shader.SetMatrix4("projection", _projection);
@@ -145,7 +185,7 @@ namespace LearnOpenTK
 
             _shader.Dispose();
             _texture1.Dispose();
-            _texture2.Dispose();
+            //_texture2.Dispose();
 
             base.OnUnload(e);
         }
