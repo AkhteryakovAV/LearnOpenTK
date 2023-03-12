@@ -13,7 +13,9 @@ namespace LearnOpenTK
     {
         private int _vertexBufferObject;
         private int _elementBufferObject;
-        private int _vertexArrayObject;
+        // vertex array object
+        private int _vaoModel;
+        private int _vaoLamp;
         private readonly float[] _vertices =
         {
             0.5f, -0.5f, 0.5f,
@@ -41,13 +43,10 @@ namespace LearnOpenTK
             2, 5, 6,
         };
 
-        private double _time;
-
-        private Shader _shader;
-
-        //Матрицы просмотра и проекции были удалены,
-        //поскольку они нам здесь больше не нужны.
-        //Теперь их можно найти в новом классе камер.
+        //Это положение как источника света, так и места, где куб лампы будет нарисован в сцене
+        private readonly Vector3 _lightPos = new Vector3(1.2f, 1.0f, 2.0f);
+        private Shader _lampShader; // шейдер лмпы (источника света)
+        private Shader _lightingShader; // шейдер для освещаемой модели
 
         //Нам нужен экземпляр нового класса camera,
         //чтобы он мог управлять кодом матрицы просмотра и проекции.
@@ -82,7 +81,6 @@ namespace LearnOpenTK
             {
                 _camera.Position += _camera.Front * cameraSpeed * (float)e.Time; // Forward
             }
-
             if (input.IsKeyDown(Key.S))
             {
                 _camera.Position -= _camera.Front * cameraSpeed * (float)e.Time; // Backwards
@@ -133,31 +131,42 @@ namespace LearnOpenTK
             GL.Enable(EnableCap.DepthTest);
 
             _vertexBufferObject = GL.GenBuffer();
-            _vertexArrayObject = GL.GenVertexArray();
-            _elementBufferObject = GL.GenBuffer();
-            _shader = new Shader("Shaders/shader.vert", "Shaders/shader.frag");
-
-            // 1. Привязываем VAO
-            GL.BindVertexArray(_vertexArrayObject);
-            // 2. Копируем наши вершины в буфер для OpenGL
             GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBufferObject);
             GL.BufferData<float>(BufferTarget.ArrayBuffer, _vertices.Length * sizeof(float), _vertices, BufferUsageHint.StaticDraw);
-            // 3. Копируем наши индексы в в буфер для OpenGL
-            GL.BindBuffer(BufferTarget.ElementArrayBuffer, _elementBufferObject);
-            GL.BufferData(BufferTarget.ElementArrayBuffer, _indices.Length * sizeof(uint), _indices, BufferUsageHint.StaticDraw);
-            // 3. Устанавливаем указатели на вершинные атрибуты
-            var vertexLocation = _shader.GetAttribLocation("aPosition");
-            GL.VertexAttribPointer(vertexLocation, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
-            GL.EnableVertexAttribArray(vertexLocation);
 
-            _shader.Use();
+            _elementBufferObject = GL.GenBuffer();
+            _lightingShader = new Shader("Shaders/shader.vert", "Shaders/lighting.frag");
+            _lampShader = new Shader("Shaders/shader.vert", "Shaders/shader.frag");
+
+            {
+                _vaoModel = GL.GenVertexArray();
+                GL.BindVertexArray(_vaoModel);
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, _elementBufferObject);
+                GL.BufferData(BufferTarget.ElementArrayBuffer, _indices.Length * sizeof(uint), _indices, BufferUsageHint.StaticDraw);
+                var vertexLocation = _lightingShader.GetAttribLocation("aPosition");
+                GL.VertexAttribPointer(vertexLocation, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
+                GL.EnableVertexAttribArray(vertexLocation);
+            }
+
+            {
+                _vaoLamp = GL.GenVertexArray();
+                GL.BindVertexArray(_vaoLamp);
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, _elementBufferObject);
+                GL.BufferData(BufferTarget.ElementArrayBuffer, _indices.Length * sizeof(uint), _indices, BufferUsageHint.StaticDraw);
+                var vertexLocation = _lightingShader.GetAttribLocation("aPosition");
+                GL.VertexAttribPointer(vertexLocation, 3, VertexAttribPointerType.Float, false, 3 * sizeof(float), 0);
+                GL.EnableVertexAttribArray(vertexLocation);
+            }
+
+
+            //_lightingShader.Use();
 
             // Мы инициализируем камеру так, чтобы она находилась на расстоянии 3 единиц от того места,
             // где находится прямоугольник. Мы также придаем ему правильное соотношение сторон.
             _camera = new Camera(Vector3.UnitZ * 3, Width / (float)Height);
 
             // Мы делаем курсор мыши невидимым и фиксируемым, чтобы у нас было правильное движение камеры с частотой кадров в секунду.
-            CursorVisible = false;
+            //CursorVisible = false;
             CursorGrabbed = true;
         }
 
@@ -166,20 +175,29 @@ namespace LearnOpenTK
             base.OnRenderFrame(e);
 
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            GL.BindVertexArray(_vertexArrayObject);
-            GL.DrawElements(PrimitiveType.Triangles, _indices.Length, DrawElementsType.UnsignedInt, 0);
             GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
 
-            _time += 40.0 * e.Time;
-            var model = Matrix4.Identity *
-                Matrix4.CreateRotationX((float)MathHelper.DegreesToRadians(_time)) *
-                Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(_time * Math.Sin(MathHelper.DegreesToRadians(_time))));
+            GL.BindVertexArray(_vaoModel);
 
-            _shader.SetMatrix4("model", model);
-            _shader.SetMatrix4("view", _camera.GetViewMatrix());
-            _shader.SetMatrix4("projection", _camera.GetProjectionMatrix());
+            _lightingShader.Use();
+            _lightingShader.SetMatrix4("model", Matrix4.Identity);
+            _lightingShader.SetMatrix4("view", _camera.GetViewMatrix());
+            _lightingShader.SetMatrix4("projection", _camera.GetProjectionMatrix());
+            _lightingShader.SetVector3("objectColor", new Vector3(1.0f, 0.5f, 0.31f));
+            _lightingShader.SetVector3("lightColor", new Vector3(1.0f, 1.0f, 1.0f));
 
-            _shader.Use();
+            GL.DrawElements(PrimitiveType.Triangles, _indices.Length, DrawElementsType.UnsignedInt, 0);
+
+            GL.BindVertexArray(_vaoLamp);
+
+            _lampShader.Use();
+            Matrix4 lampMatrix = Matrix4.CreateScale(0.2f); // We scale the lamp cube down a bit to make it less dominant
+            lampMatrix *= Matrix4.CreateTranslation(_lightPos);
+            _lampShader.SetMatrix4("model", lampMatrix);
+            _lampShader.SetMatrix4("view", _camera.GetViewMatrix());
+            _lampShader.SetMatrix4("projection", _camera.GetProjectionMatrix());
+
+            GL.DrawElements(PrimitiveType.Triangles, _indices.Length, DrawElementsType.UnsignedInt, 0);
 
             SwapBuffers();
         }
@@ -191,6 +209,7 @@ namespace LearnOpenTK
 
             _camera.Fov -= e.Mouse.ScrollWheelValue;
         }
+
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
@@ -207,9 +226,11 @@ namespace LearnOpenTK
 
             // Delete all the resources.
             GL.DeleteBuffer(_vertexBufferObject);
-            GL.DeleteVertexArray(_vertexArrayObject);
+            GL.DeleteVertexArray(_vaoModel);
+            GL.DeleteVertexArray(_vaoLamp);
 
-            _shader.Dispose();
+            _lightingShader.Dispose();
+            _lampShader.Dispose();
 
             base.OnUnload(e);
         }
