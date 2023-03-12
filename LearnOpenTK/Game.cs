@@ -42,10 +42,22 @@ namespace LearnOpenTK
         };
 
         private double _time;
-        private Matrix4 _view;
-        private Matrix4 _projection;
 
         private Shader _shader;
+
+        //Матрицы просмотра и проекции были удалены,
+        //поскольку они нам здесь больше не нужны.
+        //Теперь их можно найти в новом классе камер.
+
+        //Нам нужен экземпляр нового класса camera,
+        //чтобы он мог управлять кодом матрицы просмотра и проекции.
+        //Нам также нужно логическое значение, установленное в true, чтобы определить,
+        //была ли мышь перемещена в первый раз или нет.
+        //Наконец, мы добавляем последнее положение мыши, чтобы мы могли легко вычислить смещение мыши.
+        private Camera _camera;
+        private bool _firstMove = true;
+        private Vector2 _lastPos;
+
 
         public Game(int width, int height, string title)
             : base(width, height, GraphicsMode.Default, title)
@@ -54,10 +66,62 @@ namespace LearnOpenTK
         protected override void OnUpdateFrame(FrameEventArgs e)
         {
             base.OnUpdateFrame(e);
-            KeyboardState keyboardState = Keyboard.GetState();
-            if (keyboardState.IsKeyDown(Key.Escape))
+            if (!Focused) // Check to see if the window is focused
+            {
+                return;
+            }
+            KeyboardState input = Keyboard.GetState();
+            if (input.IsKeyDown(Key.Escape))
             {
                 Exit();
+            }
+            const float cameraSpeed = 1.5f;
+            const float sensitivity = 0.2f;
+
+            if (input.IsKeyDown(Key.W))
+            {
+                _camera.Position += _camera.Front * cameraSpeed * (float)e.Time; // Forward
+            }
+
+            if (input.IsKeyDown(Key.S))
+            {
+                _camera.Position -= _camera.Front * cameraSpeed * (float)e.Time; // Backwards
+            }
+            if (input.IsKeyDown(Key.A))
+            {
+                _camera.Position -= _camera.Right * cameraSpeed * (float)e.Time; // Left
+            }
+            if (input.IsKeyDown(Key.D))
+            {
+                _camera.Position += _camera.Right * cameraSpeed * (float)e.Time; // Right
+            }
+            if (input.IsKeyDown(Key.Space))
+            {
+                _camera.Position += _camera.Up * cameraSpeed * (float)e.Time; // Up
+            }
+            if (input.IsKeyDown(Key.ShiftLeft))
+            {
+                _camera.Position -= _camera.Up * cameraSpeed * (float)e.Time; // Down
+            }
+
+            // Get the mouse state
+            var mouse = Mouse.GetState();
+
+            if (_firstMove) // This bool variable is initially set to true.
+            {
+                _lastPos = new Vector2(mouse.X, mouse.Y);
+                _firstMove = false;
+            }
+            else
+            {
+                // Calculate the offset of the mouse position
+                var deltaX = mouse.X - _lastPos.X;
+                var deltaY = mouse.Y - _lastPos.Y;
+                _lastPos = new Vector2(mouse.X, mouse.Y);
+
+                // Apply the camera pitch and yaw (we clamp the pitch in the camera class)
+                _camera.Yaw += deltaX * sensitivity;
+                _camera.Pitch -= deltaY * sensitivity; // Reversed since y-coordinates range from bottom to top
             }
         }
 
@@ -88,8 +152,13 @@ namespace LearnOpenTK
 
             _shader.Use();
 
-            _view = Matrix4.CreateTranslation(0.0f, 0.0f, -3.0f);
-            _projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45f), Width / (float)Height, 0.1f, 100.0f);
+            // Мы инициализируем камеру так, чтобы она находилась на расстоянии 3 единиц от того места,
+            // где находится прямоугольник. Мы также придаем ему правильное соотношение сторон.
+            _camera = new Camera(Vector3.UnitZ * 3, Width / (float)Height);
+
+            // Мы делаем курсор мыши невидимым и фиксируемым, чтобы у нас было правильное движение камеры с частотой кадров в секунду.
+            CursorVisible = false;
+            CursorGrabbed = true;
         }
 
         protected override void OnRenderFrame(FrameEventArgs e)
@@ -107,18 +176,26 @@ namespace LearnOpenTK
                 Matrix4.CreateRotationY((float)MathHelper.DegreesToRadians(_time * Math.Sin(MathHelper.DegreesToRadians(_time))));
 
             _shader.SetMatrix4("model", model);
-            _shader.SetMatrix4("view", _view);
-            _shader.SetMatrix4("projection", _projection);
+            _shader.SetMatrix4("view", _camera.GetViewMatrix());
+            _shader.SetMatrix4("projection", _camera.GetProjectionMatrix());
 
             _shader.Use();
 
             SwapBuffers();
         }
+        // In the mouse wheel function, we manage all the zooming of the camera.
+        // This is simply done by changing the FOV of the camera.
+        protected override void OnMouseWheel(MouseWheelEventArgs e)
+        {
+            base.OnMouseWheel(e);
 
+            _camera.Fov -= e.Mouse.ScrollWheelValue;
+        }
         protected override void OnResize(EventArgs e)
         {
             base.OnResize(e);
             GL.Viewport(0, 0, Width, Height);
+            _camera.AspectRatio = Width / (float)Height;
         }
 
         protected override void OnUnload(EventArgs e)
